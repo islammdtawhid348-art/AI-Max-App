@@ -102,12 +102,12 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             else startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://m.me")))
         } else {
             speak(when {
-                low.contains("তোমার নাম") || low.contains("নাম কি") || low.contains("নাম কী") -> "আমার নাম AI MAX।"
+                low.contains("নাম") || low.contains("নাম কি") || low.contains("নাম কী") -> "আমার নাম AI MAX।"
                 low.contains("কেমন আছ") -> "আমি ভালো আছি। আপনার কী খবর?"
                 low.contains("সালাম") -> "ওয়ালাইকুমুস সালাম! কীভাবে সাহায্য করতে পারি?"
                 low.contains("ধন্যবাদ") -> "আপনাকে স্বাগতম!"
                 low.contains("তুমি কে") -> "আমি AI MAX, আপনার সহকারী।"
-                else -> "বুঝতে পারিনি, আবার বলুন।"
+                else -> "বুঝতে পারিনি। শুনেছি: " + raw
             })
         }
     }
