@@ -44,31 +44,24 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     }
 
     private fun listen() {
-        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 1)
-            return
-        }
-        rec?.destroy()
-        rec = SpeechRecognizer.createSpeechRecognizer(this)
-        rec?.setRecognitionListener(object : RecognitionListener {
-            override fun onResults(r: Bundle?) {
-                val t = r?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull() ?: ""
-                status.text = "আপনি: $t"
-                handle(t)
-            }
-            override fun onError(e: Int) { status.text = "শোনা যায়নি, কোড $e" }
-            override fun onReadyForSpeech(p: Bundle?) { status.text = "শুনছি..." }
-            override fun onBeginningOfSpeech() {}
-            override fun onRmsChanged(v: Float) {}
-            override fun onBufferReceived(b: ByteArray?) {}
-            override fun onEndOfSpeech() {}
-            override fun onPartialResults(p: Bundle?) {}
-            override fun onEvent(t: Int, p: Bundle?) {}
-        })
         val i = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
         i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
         i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "bn-BD")
-        rec?.startListening(i)
+        i.putExtra(RecognizerIntent.EXTRA_PROMPT, "বলুন")
+        try {
+            startActivityForResult(i, 100)
+        } catch (e: Exception) {
+            status.text = "ভয়েস সেবা পাওয়া যায়নি"
+        }
+    }
+
+    override fun onActivityResult(rc: Int, res: Int, data: Intent?) {
+        super.onActivityResult(rc, res, data)
+        if (rc == 100 && res == RESULT_OK) {
+            val t = data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull() ?: ""
+            status.text = "আপনি: $t"
+            handle(t)
+        }
     }
 
     private val skip = setOf("whatsapp", "sms", "message", "number", "to", "send",
@@ -108,7 +101,14 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             if (li != null) startActivity(li)
             else startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://m.me")))
         } else {
-            speak("বুঝতে পারিনি")
+            speak(when {
+                low.contains("তোমার নাম") || low.contains("নাম কি") || low.contains("নাম কী") -> "আমার নাম AI MAX।"
+                low.contains("কেমন আছ") -> "আমি ভালো আছি। আপনার কী খবর?"
+                low.contains("সালাম") -> "ওয়ালাইকুমুস সালাম! কীভাবে সাহায্য করতে পারি?"
+                low.contains("ধন্যবাদ") -> "আপনাকে স্বাগতম!"
+                low.contains("তুমি কে") -> "আমি AI MAX, আপনার সহকারী।"
+                else -> "বুঝতে পারিনি, আবার বলুন।"
+            })
         }
     }
 }
